@@ -1,0 +1,44 @@
+name: Mac Remoto
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mac:
+    runs-on: macos-15-intel
+    timeout-minutes: 360
+
+    steps:
+      - name: Informacoes do Mac
+        run: |
+          sw_vers
+          uname -m
+          sysctl -n hw.ncpu
+          sysctl -n hw.memsize
+
+      - name: Instalar Tailscale
+        run: |
+          brew install tailscale
+
+      - name: Iniciar Tailscale
+        run: |
+          sudo "$(which tailscaled)" \
+            --state=/tmp/tailscaled.state \
+            --socket=/tmp/tailscaled.sock \
+            > /tmp/tailscaled.log 2>&1 &
+          sleep 5
+
+      - name: Login no Tailscale
+        run: |
+          sudo tailscale \
+            --socket=/tmp/tailscaled.sock \
+            up --ssh
+
+      - name: Mostrar IP
+        run: |
+          tailscale \
+            --socket=/tmp/tailscaled.sock \
+            ip -4
+
+      - name: Manter Mac ligado
+        run: sleep 21600
