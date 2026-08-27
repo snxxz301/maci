@@ -1,0 +1,48 @@
+name: Windows RDP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rdp:
+    runs-on: windows-2022
+    timeout-minutes: 360
+
+    steps:
+      - name: Criar usuario RDP
+        shell: powershell
+        run: |
+          net user rdpuser "Rdp@123456" /add
+          net localgroup administrators rdpuser /add
+          net localgroup "Remote Desktop Users" rdpuser /add
+
+      - name: Ativar RDP
+        shell: powershell
+        run: |
+          Set-ItemProperty `
+            -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" `
+            -Name "fDenyTSConnections" `
+            -Value 0
+
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+      - name: Instalar Tailscale
+        shell: powershell
+        run: |
+          choco install tailscale -y
+          Start-Sleep -Seconds 10
+
+      - name: Login Tailscale
+        shell: powershell
+        run: |
+          & "C:\Program Files\Tailscale\tailscale.exe" up
+
+      - name: Mostrar IP
+        shell: powershell
+        run: |
+          & "C:\Program Files\Tailscale\tailscale.exe" ip -4
+
+      - name: Manter ligado
+        shell: powershell
+        run: |
+          Start-Sleep -Seconds 21000
