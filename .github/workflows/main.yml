@@ -1,0 +1,42 @@
+name: Mac GitHub
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mac:
+    runs-on: macos-15-intel
+    timeout-minutes: 360
+
+    steps:
+      - name: Mostrar Mac
+        run: |
+          sw_vers
+          system_profiler SPHardwareDataType
+
+      - name: Instalar Tailscale
+        run: |
+          brew install tailscale
+
+      - name: Iniciar Tailscale
+        run: |
+          sudo tailscaled \
+            --state=/tmp/tailscale.state \
+            --socket=/tmp/tailscale.sock \
+            > /tmp/tailscale.log 2>&1 &
+          sleep 5
+
+      - name: Login no Tailscale
+        run: |
+          sudo tailscale \
+            --socket=/tmp/tailscale.sock \
+            up --ssh
+
+      - name: Mostrar IP
+        run: |
+          tailscale \
+            --socket=/tmp/tailscale.sock \
+            ip -4
+
+      - name: Manter ligado
+        run: sleep 21000
